@@ -66,3 +66,28 @@ Tests cover strategy scoring, caps, GUI sorting, saved preferences, initializati
 queue preservation, prerequisite diamonds, finite/infinite ordering, multiplayer
 and remote synchronization, and drafts surviving refreshes. These are Lua tests
 with simulated Factorio objects; visual rendering still needs an in-game check.
+
+## Development and releases
+
+Work on `develop` and merge ready changes into `main`. Every push runs the Lua
+and packaging tests. A successful push to `main` also publishes automatically;
+there is no manual tag or release step. Before merging changed mod files, update
+`info.json` and add the matching entry at the top of `changelog.txt`.
+
+The workflow builds `rantz-research_VERSION.zip`, creates `vVERSION` and a GitHub
+Release with that ZIP and changelog notes, and uploads the same ZIP to the
+Factorio mod portal. The repository secret `FACTORIO_API_KEY` needs the
+`ModPortal: Upload Mods` permission. Publishing uses Python's standard library
+and the official API, without a third-party upload action.
+
+Published versions cannot be reused for changed mod files. Documentation and
+workflow changes can keep the current version. Releases run serially; failed
+uploads leave a GitHub draft that can be completed by rerunning the workflow.
+Already completed uploads are skipped. An existing manually published version
+must first have a Git tag pointing to its matching source commit.
+
+Build a local ZIP with `python tools/release.py`. Output goes in ignored `dist/`;
+the package contains only mod files, locales, license, thumbnail and changelog.
+Run packaging tests with `python -m unittest discover -s tests -p 'test_release.py'`.
+GitHub's **Run workflow** button on `main` can retry publication without a new
+commit. Publishing is disabled on other branches and pull requests.
