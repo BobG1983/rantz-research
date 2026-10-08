@@ -1,0 +1,9 @@
+---------------------------------------------------------------------------------------------------
+Version: 1.0.0
+Date: 2026-10-07
+  Features:
+    - Initial release of Rantz Research for Factorio 2.1.
+    - Automatic research with six strategies and research pack filters.
+    - Whitelist and blacklist with per-technology limits for infinite research.
+    - Collapsible sections with remembered preferences and native Factorio icons.
+    - English and Russian translations.

@@ -1,0 +1,14 @@
+{
+    "name": "rantz-research",
+    "version": "1.0.0",
+    "title": "Rantz Research",
+    "author": "Rantz",
+    "description": "Automatic research with selectable strategies, research pack filters, whitelists, blacklists, and level limits for infinite technologies. Open Rantz Research with Shift+T (customizable).",
+    "factorio_version": "2.1",
+    "dependencies": [
+        "base >= 2.1.0",
+        "! auto-research",
+        "! factorio-research-queue",
+        "! sonaxaton-research-queue"
+    ]
+}
