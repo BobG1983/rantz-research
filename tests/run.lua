@@ -1,7 +1,7 @@
 -- From the mod root: lua tests/run.lua (Lua 5.2).
 local suites = {
     "gui_sections", "gui_sorting", "research_strategies", "research_targets",
-    "refactor_regressions"
+    "refactor_regressions", "dynamic_packs", "pack_defaults"
 }
 for _, name in ipairs(suites) do
     local environment = setmetatable({}, {__index = _G})

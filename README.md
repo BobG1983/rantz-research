@@ -24,14 +24,14 @@ Open the collapsible research panel with **Shift+T** (configurable in Controls).
 - `scripts/gui.lua`: GUI event handling and force-wide refresh coordination.
 - `scripts/gui/`: window construction, reusable sections, settings controls,
   pack controls, and incremental technology-list rendering.
-- `data.lua` / `settings.lua`: GUI styles, keyboard shortcut, and user-setting
-  prototypes. All icons use Factorio's native `item/...` and `utility/...` sprites.
+- `data.lua`: GUI styles and keyboard shortcut. All icons use Factorio's native `item/...` and `utility/...` sprites.
 
 ## Conventions and saved games
 
 Internal Lua names use snake_case. GUI names, styles, locale keys, the shortcut,
 saved configuration, and the remote interface use the `rantz_research` prefix.
-Mod settings use the `rantz-research-` prefix. Saves must already use these
+Research options, monitored labs, and dynamic pack modes are configured in the
+mod GUI. Saves must already use these
 identifiers; migration from the previous identifiers has been removed.
 External integrations must call the `rantz_research` remote interface. Old unused
 counter and announcement fields are discarded during configuration normalization.

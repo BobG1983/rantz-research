@@ -1,7 +1,7 @@
 local sections = require("scripts.gui.sections")
 local controls = require("scripts.gui.controls")
 local window = {}
-window.version = 4
+window.version = 9
 
 function window.get(player)
     return player.gui.top.rantz_research_gui
@@ -34,6 +34,18 @@ function window.create(player, config)
     local settings_panel = sections.add_collapsible_section(flow, "settings", {type = "flow", direction = "vertical"})
     for _, setting in ipairs(controls.settings) do
         controls.add_checkbox(settings_panel, setting.name, setting.label, config[setting.field])
+    end
+    local timing = settings_panel.add{type = "table", name = "monitor_timing", column_count = 2}
+    timing.style.horizontal_spacing = 8
+    for _, name in ipairs({"pack_check_seconds", "pack_grace_seconds"}) do
+        timing.add{type = "label", caption = {"rantz_research_gui." .. name}}
+        local row = timing.add{type = "flow", name = name, direction = "horizontal"}
+        row.style.vertical_align = "center"
+        local field = row.add{type = "textfield", name = "rantz_research_timing_input", text = tostring(config[name]),
+            numeric = true, allow_decimal = false, allow_negative = false, lose_focus_on_confirm = true,
+            tooltip = {"rantz_research_gui." .. name .. "_tooltip"},
+            tags = {monitor_timing = name, saved_text = tostring(config[name])}}
+        field.style.width = 60
     end
     sections.restore(player, flow)
     return frame

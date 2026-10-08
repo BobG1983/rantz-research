@@ -20,6 +20,12 @@ function controls.sync(flow, config)
     for _, name in ipairs(controls.strategies) do
         flow.research_strategies_outer["rantz_research_research_" .. name].state = config.research_strategy == name
     end
+    for _, name in ipairs({"pack_check_seconds", "pack_grace_seconds"}) do
+        local field = flow.settings.monitor_timing[name].rantz_research_timing_input
+        local saved = tostring(config[name])
+        if field.text == field.tags.saved_text then field.text = saved end
+        field.tags = {monitor_timing = name, saved_text = saved}
+    end
 end
 
 function controls.setting_field(name)

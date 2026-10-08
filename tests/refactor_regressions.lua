@@ -95,7 +95,7 @@ research.set_strategy(force, "expensive")
 assert(flow(1).allowed.flow["rantz_research_target-a"] == field and field.text == "123" and field.test_has_focus)
 assert(flow(2).research_strategies_outer.rantz_research_research_expensive.state)
 research.set_pack_allowed(force, "red", false)
-assert(not flow(2).allowed_ingredients.red["rantz_research_allow_ingredient-red"].state)
+assert(flow(2).allowed_ingredients.red.rantz_pack_mode.selected_index == 2)
 assert(field.valid and field.text == "123")
 research.set_target_level(force, "a", 15)
 assert(field.text == "123", "Another player changing a target must not erase a local draft")
@@ -133,26 +133,21 @@ assert(prepare_calls == 1, "Two players should share one list preparation")
 local callbacks, remote_calls = {}, 0
 remote.call = function() remote_calls = remote_calls + 1 end
 defines = {events = {on_player_joined_game = 1, on_player_created = 2, on_force_created = 3,
-    on_research_finished = 4, on_gui_checked_state_changed = 5, on_gui_click = 6, on_gui_confirmed = 7}}
+    on_research_finished = 4, on_gui_checked_state_changed = 5, on_gui_click = 6, on_gui_confirmed = 7, on_gui_opened = 8, on_gui_closed = 9,
+    on_pre_player_mined_item = 10, on_robot_pre_mined = 11, on_entity_died = 12, script_raised_destroy = 13, on_gui_selection_state_changed = 14}}
 script = {
+    on_nth_tick = function() end,
     on_init = function(fn) callbacks.init = fn end,
     on_configuration_changed = function(fn) callbacks.configuration = fn end,
     on_event = function(id, fn) callbacks[id] = fn end
 }
-settings = {get_player_settings = function() return {
-    ["rantz-research-queued-tech-setting"] = {value = "b, b, missing"},
-    ["rantz-research-blacklisted-tech-setting"] = {value = "c, c"}
-} end}
+settings = {get_player_settings = function() error("Removed per-player settings must not be read") end}
 require("scripts.events")
 callbacks.init()
 assert(remote_calls == 1)
 callbacks.configuration()
 assert(remote_calls == 2 and config.target_levels.a == 123)
-callbacks[2]({player_index = 1})
-callbacks[2]({player_index = 2})
-local occurrences = 0
-for _, name in ipairs(config.prioritized_techs) do if name == "b" then occurrences = occurrences + 1 end end
-assert(occurrences == 1, "Defaults from multiple players must not duplicate queue entries")
+assert(callbacks[2] == nil, "Creating a player must not seed research lists")
 assert(configuration.get(force) == config and remote_calls == 2)
 assert(remote.interfaces.rantz_research)
 print("Refactor regressions passed")

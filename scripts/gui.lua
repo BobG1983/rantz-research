@@ -5,6 +5,7 @@ local sections = require("scripts.gui.sections")
 local controls = require("scripts.gui.controls")
 local packs = require("scripts.gui.packs")
 local lists = require("scripts.gui.technology_lists")
+local lab_gui = require("scripts.gui.lab")
 local gui = {}
 
 function gui.remove_legacy_controls(player)
@@ -28,6 +29,7 @@ function gui.refresh_force(force)
     local config = research.ensure_config(force)
     local prepared
     for _, player in pairs(force.players) do
+        lab_gui.refresh(player)
         if window.get(player) then
             prepared = prepared or lists.prepare(force, config)
             refresh_player(player, config, prepared)
@@ -63,8 +65,15 @@ function gui.on_checkbox_click(event)
     if not player then return end
     local field = controls.setting_field(event.element.name)
     if field then research.set_setting(player.force, field, event.element.state); return end
-    local ingredient = string.match(event.element.name, "^rantz_research_allow_ingredient%-(.+)$")
-    if ingredient then research.set_pack_allowed(player.force, ingredient, event.element.state) end
+end
+
+function gui.on_pack_selection_changed(event)
+    local player = event_player(event)
+    if not player or event.element.name ~= "rantz_pack_mode" then return end
+    local modes = {"on", "off", "dynamic"}
+    if not research.set_pack_mode(player.force, event.element.tags.pack, modes[event.element.selected_index]) then
+        gui.refresh_force(player.force)
+    end
 end
 
 local function target_update(player, field, name)
@@ -81,6 +90,7 @@ local function target_update(player, field, name)
 end
 
 function gui.on_click(event)
+    if lab_gui.on_click(event) then return end
     local player, frame = event_player(event)
     if not player then return end
     local name = event.element.name
@@ -108,6 +118,19 @@ function gui.on_target_confirmed(event)
     local player = event_player(event)
     if not player then return end
     local field = event.element
+    local timing = field.tags.monitor_timing
+    if timing == "pack_check_seconds" or timing == "pack_grace_seconds" then
+        local value = string.match(field.text, "^%d+$") and tonumber(field.text)
+        local valid = value and value <= 3600 and value >= (timing == "pack_check_seconds" and 1 or 0)
+        if valid then
+            field.tags = {monitor_timing = timing, saved_text = field.text}
+            research.set_monitor_timing(player.force, timing, value)
+        else
+            field.text = tostring(research.ensure_config(player.force)[timing])
+            field.tags = {monitor_timing = timing, saved_text = field.text}
+        end
+        return
+    end
     local name = string.match(field.name, "^rantz_research_target%-(.+)$")
     local tech = name and player.force.technologies[name]
     if not tech or not technology.is_infinite(tech) then return end

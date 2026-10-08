@@ -1,4 +1,30 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 2026-10-07
+  Features:
+    - Added On, Off, and Dynamic modes for research packs.
+    - Added Monitor this lab and Stop monitoring controls beside the lab GUI, with one monitored lab per force.
+    - Monitoring a different lab replaces the previous source; manual On and Off pack choices remain independent of monitoring.
+    - Dynamic packs follow the monitored lab's inventory and affect research eligibility and list sorting.
+    - Added editable pack check interval and empty pack grace period settings, defaulting to 10 and 60 seconds.
+  Gui:
+    - Aligned the timing settings labels and inputs in shared columns.
+    - Replaced pack mode radio buttons with compact On / Off / Dynamic dropdowns.
+    - Packs without a saved choice default to On after their unlocking research, and Off beforehand; explicit choices are retained.
+    - Made the lab monitoring panel compact and collapsible, remembering expansion separately for each player.
+    - Dynamic mode is unavailable without a monitored lab, with a tooltip explaining how to enable it.
+    - Pack icons indicate effective availability, and monitoring changes synchronize across players.
+    - Removing a monitored lab clears monitoring while retaining Dynamic selections and research limits.
+  Changes:
+    - Removed the per-player default queued and default blacklisted technology settings.
+    - Added the GitHub repository link to the mod metadata.
+  Bugfixes:
+    - Fixed a crash when opening a lab before any panel expansion preference had been saved.
+    - Fixed a configuration-change crash from applying button-only grayscale styling to pack images; availability now uses status indicators.
+    - Fixed a reserved GUI field name causing a crash when creating the monitoring settings.
+  Locale:
+    - Added English and Russian translations for monitoring, pack modes, and timing settings.
+---------------------------------------------------------------------------------------------------
 Version: 1.0.0
 Date: 2026-10-07
   Features:

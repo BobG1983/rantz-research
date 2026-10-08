@@ -2,6 +2,7 @@ local configuration = require("scripts.research.configuration")
 local selection = require("scripts.research.selection")
 local queue = require("scripts.research.queue")
 local technology = require("scripts.research.technology")
+local monitor = require("scripts.research.monitor")
 
 local research = {}
 local change_listener
@@ -54,13 +55,75 @@ function research.set_strategy(force, strategy)
     return true
 end
 
-function research.set_pack_allowed(force, name, value)
-    if not force or type(value) ~= "boolean" then return false end
+function research.set_pack_mode(force, name, mode)
+    if not force or (mode ~= "on" and mode ~= "off" and mode ~= "dynamic") then return false end
     local config = configuration.ensure(force)
     if config.allowed_ingredients[name] == nil then return false end
-    config.allowed_ingredients[name] = value
+    if mode == "dynamic" and not monitor.valid_lab(config.monitored_lab, force) then return false end
+    if config.pack_defaults then config.pack_defaults[name] = nil end
+    config.dynamic_packs[name] = mode == "dynamic" or nil
+    config.dynamic_available[name] = nil
+    config.pack_empty_since[name] = nil
+    if mode ~= "dynamic" then config.allowed_ingredients[name] = mode == "on" end
+    monitor.sample(force, config, game.tick)
     changed(force)
     return true
+end
+
+function research.set_pack_allowed(force, name, value)
+    if type(value) ~= "boolean" then return false end
+    return research.set_pack_mode(force, name, value and "on" or "off")
+end
+
+function research.set_monitored_lab(force, lab)
+    if not force or (lab and not monitor.valid_lab(lab, force)) then return false end
+    local config = configuration.ensure(force)
+    config.monitored_lab = lab
+    config.dynamic_available = {}
+    config.pack_empty_since = {}
+    monitor.sample(force, config, game.tick)
+    config.last_pack_check_tick = game.tick
+    changed(force)
+    return true
+end
+
+function research.on_monitored_lab_removed(event)
+    local lab = event and event.entity
+    if not lab then return end
+    local force = lab.force
+    if not force then return end
+    local config = configuration.get(force)
+    if not config or config.monitored_lab ~= lab then return end
+    config.monitored_lab = nil
+    config.dynamic_available = {}
+    config.pack_empty_since = {}
+    config.last_pack_check_tick = nil
+    changed(force)
+end
+
+function research.set_monitor_timing(force, name, value)
+    if not force or (name ~= "pack_check_seconds" and name ~= "pack_grace_seconds") then return false end
+    local minimum = name == "pack_check_seconds" and 1 or 0
+    if type(value) ~= "number" or value ~= value or value < minimum or value > 3600
+        or value ~= math.floor(value) then return false end
+    local config = configuration.ensure(force)
+    config[name] = value
+    config.last_pack_check_tick = nil
+    if change_listener then change_listener(force) end
+    return true
+end
+
+function research.poll_monitors()
+    for force_name, config in pairs(storage.rantz_research_config or {}) do
+        local force = game.forces[force_name]
+        if not force then
+            storage.rantz_research_config[force_name] = nil
+        elseif (config.monitored_lab or next(config.dynamic_packs or {})) and
+            (not config.last_pack_check_tick or game.tick - config.last_pack_check_tick >= (config.pack_check_seconds or 10) * 60) then
+            config.last_pack_check_tick = game.tick
+            if monitor.sample(force, config, game.tick) then changed(force) end
+        end
+    end
 end
 
 local function valid_target(tech, value)
@@ -95,6 +158,7 @@ end
 function research.on_research_finished(event)
     local force = event.research.force
     local config = configuration.ensure(force)
+    configuration.refresh(force, config)
     for _, names in ipairs({config.prioritized_techs, config.deprioritized_techs}) do
         for i = #names, 1, -1 do
             local tech = force.technologies[names[i]]

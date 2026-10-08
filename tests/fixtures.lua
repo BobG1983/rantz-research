@@ -1,12 +1,22 @@
 local fixtures = {}
 
 function fixtures.element(spec, parent)
-    local node = {parent = parent, children = {}, style = {}, valid = true,
+    local style = setmetatable({}, {__newindex = function(target, key, value)
+        if key == "draw_grayscale_picture" then
+            assert(spec.type == "button" or spec.type == "sprite-button",
+                "draw_grayscale_picture requires a button style")
+        end
+        rawset(target, key, value)
+    end})
+    local node = {parent = parent, children = {}, style = style, valid = true,
         visible = spec.visible ~= false, enabled = spec.enabled ~= false,
         tags = spec.tags or {}, text = spec.text or ""}
     for name, value in pairs(spec) do if name ~= "style" then node[name] = value end end
     node.add = function(child_spec)
         assert(node.valid)
+        -- LuaGuiElement reserves property names even on element types where the
+        -- property is unused (for example value on a flow).
+        assert(child_spec.name ~= "value", "GUI name collides with LuaGuiElement.value")
         local child = fixtures.element(child_spec, node)
         assert(not child.name or node[child.name] == nil, "Duplicate GUI name")
         node.children[#node.children + 1] = child

@@ -1,3 +1,4 @@
+local monitor = require("scripts.research.monitor")
 local packs = {}
 
 local pack_order = {
@@ -38,7 +39,8 @@ function packs.update(flow, config)
     end)
     local enabled = 0
     for index, name in ipairs(names) do
-        local allowed = config.allowed_ingredients[name]
+        local allowed = monitor.is_allowed(config, name)
+        local dynamic = config.dynamic_packs and config.dynamic_packs[name] == true
         if allowed then enabled = enabled + 1 end
         local row = flow[name]
         if not row then
@@ -48,22 +50,36 @@ function packs.update(flow, config)
             row.style.vertical_align = "center"
             row.style.horizontal_spacing = 8
             row.add{
-                type = "checkbox",
-                name = "rantz_research_allow_ingredient-" .. name,
-                caption = "",
-                tooltip = caption,
-                state = allowed
-            }
-            row.add{
-                type = "sprite",
+                type = "sprite", name = "icon",
                 style = "rantz_research_sprite",
                 sprite = prototype and ("item/" .. name) or "utility/questionmark",
                 tooltip = caption
             }
+            local dropdown = row.add{type = "drop-down", name = "rantz_pack_mode",
+                items = {}, tags = {pack = name}}
+            dropdown.style.width = 120
         end
         local current_index = row.get_index_in_parent()
         if current_index ~= index then flow.swap_children(current_index, index) end
-        row["rantz_research_allow_ingredient-" .. name].state = allowed
+        local dropdown = row.rantz_pack_mode
+        local has_lab = monitor.has_lab(config)
+        -- Factorio cannot disable individual dropdown entries. Show Dynamic in
+        -- grey without a lab and reject that selection in the event handler.
+        dropdown.items = {{"rantz_research_gui.pack_on"}, {"rantz_research_gui.pack_off"},
+            has_lab and {"rantz_research_gui.pack_dynamic"} or
+                {"", "[color=128,128,128]", {"rantz_research_gui.pack_dynamic"}, "[/color]"}}
+        dropdown.selected_index = dynamic and 3 or (config.allowed_ingredients[name] and 1 or 2)
+        dropdown.tooltip = {"rantz_research_gui." .. (has_lab and "dynamic_tooltip" or "monitor_required")}
+        row.icon.tooltip = {"", prototypes.item[name] and prototypes.item[name].localised_name or name,
+            "\n", {"rantz_research_gui." .. (allowed and "pack_available" or "pack_unavailable")}}
+        local indicator = row.rantz_pack_availability
+        if not indicator then
+            indicator = row.add{type = "sprite", name = "rantz_pack_availability"}
+            indicator.style.width = 12
+            indicator.style.height = 12
+        end
+        indicator.sprite = allowed and "utility/status_working" or "utility/status_not_working"
+        indicator.tooltip = {"rantz_research_gui." .. (allowed and "pack_available" or "pack_unavailable")}
     end
     flow.parent.ingredients_header.summary.caption = {
         "", {"rantz_research_gui.allowed_ingredients_label"}, " (", enabled, "/", #names, ")"

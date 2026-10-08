@@ -4,8 +4,9 @@ local element = fixtures.element
 
 local handlers = {}
 defines = {events = {on_player_created = 1, on_force_created = 2, on_research_finished = 3,
-    on_gui_checked_state_changed = 4, on_gui_click = 5, on_gui_confirmed = 6, on_player_joined_game = 7}}
-script = {on_init = function() end, on_configuration_changed = function() end, on_event = function(id, fn) handlers[id] = fn end}
+    on_gui_checked_state_changed = 4, on_gui_click = 5, on_gui_confirmed = 6, on_player_joined_game = 7, on_gui_opened = 8, on_gui_closed = 9,
+    on_pre_player_mined_item = 10, on_robot_pre_mined = 11, on_entity_died = 12, script_raised_destroy = 13, on_gui_selection_state_changed = 14}}
+script = {on_nth_tick = function() end, on_init = function() end, on_configuration_changed = function() end, on_event = function(id, fn) handlers[id] = fn end}
 remote = {interfaces = {}, add_interface = function(name, api) remote.interfaces[name] = api end}
 require("control")
 assert(remote.interfaces.rantz_research.announce_completed == nil)
@@ -55,9 +56,9 @@ check("blacklisted", {"bcheap", "bexpensive", "bcap", "bpack"}, {bcap = true, bp
 handlers[5]({player_index = 1, element = flow.research_strategies_outer.rantz_research_research_expensive})
 check("allowed", {"wexpensive", "wcheap", "wpack", "wcap"}, {wcap = true, wpack = true})
 check("blacklisted", {"bexpensive", "bcheap", "bpack", "bcap"}, {bcap = true, bpack = true})
-local checkbox = flow.allowed_ingredients.blue["rantz_research_allow_ingredient-blue"]
-checkbox.state = true
-handlers[4]({player_index = 1, element = checkbox})
+local dropdown = flow.allowed_ingredients.blue.rantz_pack_mode
+dropdown.selected_index = 1
+handlers[14]({player_index = 1, element = dropdown})
 check("allowed", {"wexpensive", "wcheap", "wpack", "wcap"}, {wcap = true})
 check("blacklisted", {"bexpensive", "bcheap", "bpack", "bcap"}, {bcap = true})
 handlers[5]({player_index = 1, element = flow.research_strategies_outer.rantz_research_research_cheap})

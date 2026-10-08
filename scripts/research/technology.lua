@@ -1,4 +1,5 @@
 local pack_costs = require("scripts.research.pack_costs")
+local monitor = require("scripts.research.monitor")
 
 local technology = {}
 
@@ -15,7 +16,7 @@ end
 
 function technology.has_disabled_packs(tech, config)
     for _, ingredient in pairs(tech.research_unit_ingredients) do
-        if not config.allowed_ingredients[ingredient.name] then return true end
+        if not monitor.is_allowed(config, ingredient.name) then return true end
     end
     return false
 end
