@@ -5,7 +5,8 @@ local element = fixtures.element
 local handlers = {}
 defines = {events = {on_player_created = 1, on_force_created = 2, on_research_finished = 3,
     on_gui_checked_state_changed = 4, on_gui_click = 5, on_gui_confirmed = 6, on_player_joined_game = 7, on_gui_opened = 8, on_gui_closed = 9,
-    on_pre_player_mined_item = 10, on_robot_pre_mined = 11, on_entity_died = 12, script_raised_destroy = 13, on_gui_selection_state_changed = 14}}
+    on_pre_player_mined_item = 10, on_robot_pre_mined = 11, on_entity_died = 12, script_raised_destroy = 13, on_gui_selection_state_changed = 14,
+    on_research_queued = 15, on_research_moved = 16, on_research_cancelled = 17}}
 script = {on_nth_tick = function() end, on_init = function() end, on_configuration_changed = function() end, on_event = function(id, fn) handlers[id] = fn end}
 remote = {interfaces = {}, add_interface = function(name, api) remote.interfaces[name] = api end}
 require("control")

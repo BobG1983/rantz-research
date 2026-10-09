@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.1
+Date: 2026-10-08
+  Bugfixes:
+    - Switching automatic research now removes the previous automatic choice instead of leaving it queued.
+    - Player-queued technologies retain their order and take priority over automatic research.
+    - Research limits only remove automatically queued work; manually queued research is preserved.
+  Changes:
+    - Existing queues from older versions are treated as player-owned because their origin was not recorded.
+---------------------------------------------------------------------------------------------------
 Version: 1.1.0
 Date: 2026-10-07
   Features:

@@ -16,9 +16,12 @@ Open the collapsible research panel with **Shift+T** (configurable in Controls).
   change listener installed when the runtime modules load.
 - `scripts/research/selection.lua`: select an eligible candidate without modifying
   the queue. User-prioritized technologies take precedence.
-- `scripts/research/queue.lua`: remove capped entries and promote candidates.
-  Existing entries are retained; a full queue won't evict work to insert a new
-  candidate. With switching disabled, eligible current research stays in place.
+- `scripts/research/queue.lua`: track one automatic choice and replace it on
+  switches. Player entries keep their order ahead of automatic work, including
+  in full queues. Limits remove only automatic entries. With switching disabled,
+  current research is retained, but newly queued player work takes precedence.
+  Queues from older saves are preserved as player-owned. Manually rearranging
+  the queue makes its entire current order player-owned.
 - `scripts/research/technology.lua`: eligibility, prerequisite traversal, scoring,
   and shared finite/infinite ordering. Pack weights are in `pack_costs.lua`.
 - `scripts/gui.lua`: GUI event handling and force-wide refresh coordination.

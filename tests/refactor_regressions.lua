@@ -53,7 +53,7 @@ config.deprioritize_infinite_tech = false
 config.research_strategy = "cheap"
 force.research_queue = {b, c}
 research.start_next_research(force, true)
-assert(force.current_research == a and force.research_queue[2] == b and force.research_queue[3] == c)
+assert(force.current_research == b and force.research_queue[2] == c and force.research_queue[3] == a)
 local writes = force.queue_writes
 research.start_next_research(force, true)
 assert(force.queue_writes == writes, "Already selected work must not be requeued")
@@ -62,6 +62,7 @@ force.research_queue = {b, c}
 research.start_next_research(force, true)
 assert(force.current_research == b and #force.research_queue == 2)
 config.target_levels.b = 13
+config.automatic_research = "b"
 research.start_next_research(force, true)
 assert(force.current_research == c and #force.research_queue == 1)
 config.target_levels.b = nil
@@ -73,10 +74,10 @@ for i = 1, 7 do
     full[i] = t
 end
 force.research_queue = full
-queue.promote(force, "a")
+queue.promote(force, "a", config)
 assert(#force.research_queue == 7 and force.research_queue[7] == full[7], "Full queues must not lose entries")
-queue.promote(force, full[7].name)
-assert(force.current_research == full[7] and force.research_queue[7] == full[6])
+queue.promote(force, full[7].name, config)
+assert(force.current_research == full[1] and force.research_queue[7] == full[7])
 
 -- All mutation paths, including public remote methods, synchronize both windows.
 config.enabled = false
@@ -134,7 +135,8 @@ local callbacks, remote_calls = {}, 0
 remote.call = function() remote_calls = remote_calls + 1 end
 defines = {events = {on_player_joined_game = 1, on_player_created = 2, on_force_created = 3,
     on_research_finished = 4, on_gui_checked_state_changed = 5, on_gui_click = 6, on_gui_confirmed = 7, on_gui_opened = 8, on_gui_closed = 9,
-    on_pre_player_mined_item = 10, on_robot_pre_mined = 11, on_entity_died = 12, script_raised_destroy = 13, on_gui_selection_state_changed = 14}}
+    on_pre_player_mined_item = 10, on_robot_pre_mined = 11, on_entity_died = 12, script_raised_destroy = 13, on_gui_selection_state_changed = 14,
+    on_research_queued = 15, on_research_moved = 16, on_research_cancelled = 17}}
 script = {
     on_nth_tick = function() end,
     on_init = function(fn) callbacks.init = fn end,

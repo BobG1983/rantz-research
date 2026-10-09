@@ -115,12 +115,16 @@ confirm("13")
 gui.toggle_gui(player)
 gui.toggle_gui(player)
 assert(field().text == "13")
--- Even a queued/current capped technology must be removed; finite work survives.
+-- Limits remove the automatic choice, while explicitly queued work survives.
 config.enabled = true
 config.allow_switching = false
-force.research_queue = {infinite, finite, infinite}
+force.research_queue = {infinite, finite}
+config.automatic_research = infinite.name
 research.start_next_research(force, true)
 assert(#force.research_queue == 1 and force.research_queue[1].name == "finite")
+force.research_queue = {infinite, finite, infinite}
+research.start_next_research(force, true)
+assert(#force.research_queue == 3, "Manually queued levels are not removed by automatic limits")
 -- Research completion refreshes both lists, retaining targets and hiding completed finite work.
 config.enabled = false
 finite.researched = true

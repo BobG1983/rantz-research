@@ -24,11 +24,12 @@ function research.start_next_research(force, override_throttle)
     local config = configuration.ensure(force)
     if not config.enabled then return end
     queue.remove_capped(force, config)
+    queue.yield_to_player(force, config)
     if force.current_research and not config.allow_switching then return end
     if not override_throttle and config.last_research_finish_tick == game.tick then return end
     -- Retain the historical saved key; this is a per-force scheduling throttle.
     config.last_research_finish_tick = game.tick
-    queue.promote(force, selection.choose(force, config))
+    queue.promote(force, selection.choose(force, config), config)
 end
 
 local function changed(force)
@@ -158,6 +159,7 @@ end
 function research.on_research_finished(event)
     local force = event.research.force
     local config = configuration.ensure(force)
+    if config.automatic_research == event.research.name then config.automatic_research = nil end
     configuration.refresh(force, config)
     for _, names in ipairs({config.prioritized_techs, config.deprioritized_techs}) do
         for i = #names, 1, -1 do
@@ -167,6 +169,30 @@ function research.on_research_finished(event)
     end
     research.start_next_research(force)
     if change_listener then change_listener(force) end
+end
+
+function research.on_research_queued(event)
+    if not event.player_index then return end
+    local config = configuration.ensure(event.force)
+    if config.automatic_research == event.research.name then config.automatic_research = nil end
+    changed(event.force)
+end
+
+function research.on_research_moved(event)
+    if not event.player_index then return end
+    -- A manually arranged queue is now the player's explicit ordering.
+    configuration.ensure(event.force).automatic_research = nil
+    if change_listener then change_listener(event.force) end
+end
+
+function research.on_research_cancelled(event)
+    if not event.player_index then return end
+    local config = configuration.ensure(event.force)
+    if config.automatic_research and event.research[config.automatic_research] then
+        config.automatic_research = nil
+    end
+    -- Do not immediately restore a choice the player has just cancelled.
+    if change_listener then change_listener(event.force) end
 end
 
 return research

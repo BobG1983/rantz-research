@@ -94,10 +94,12 @@ game.tick = 360; research.poll_monitors()
 assert(monitor.is_allowed(config, pack))
 assert(require("scripts.research.monitor").is_allowed(config, pack))
 config.enabled = true
-force.research_queue = {rare, common}
+force.research_queue = {}
+research.start_next_research(force, true)
+assert(config.automatic_research == rare.name)
 game.tick = 420; research.poll_monitors()
 assert(not monitor.is_allowed(config, pack) and force.current_research == common)
-assert(force.research_queue[2] == rare, "Interrupted research remains queued")
+assert(#force.research_queue == 1, "Interrupted automatic research is removed from the queue")
 local writes = force.queue_writes
 game.tick = 480; research.poll_monitors()
 assert(force.queue_writes == writes, "Unchanged inventories must not reschedule research")
@@ -136,9 +138,10 @@ replacement.force = {}
 game.tick = game.tick + 60
 research.poll_monitors()
 assert(not config.monitored_lab)
--- No candidate: retain queue. Queued-only, blacklist, and targets still apply.
+-- No candidate: retain the player's queue. Queued-only, blacklist, and targets still apply.
 config.enabled = true; config.allow_switching = true; config.prioritized_only = true
 force.research_queue = {rare}
+config.automatic_research = nil
 research.start_next_research(force, true)
 assert(force.current_research == rare)
 config.enabled = false; config.prioritized_only = false
