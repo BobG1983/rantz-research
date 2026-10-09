@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.2
+Date: 2026-10-09
+  Gui:
+    - Pack indicators now distinguish In stock, Out of stock, and Not researched, with Stock not monitored when no inventory reading is available.
+    - Stock indicators reflect the monitored lab's latest inventory check independently of manual pack settings and the Dynamic grace period.
+  Locale:
+    - Added English and Russian explanations for pack status indicators.
+---------------------------------------------------------------------------------------------------
 Version: 1.1.1
 Date: 2026-10-08
   Bugfixes:

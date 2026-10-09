@@ -22,13 +22,15 @@ function configuration.refresh(force, config)
         end
     end
     local ingredients = {}
+    config.researched_packs = {}
     for _, tech in pairs(force.technologies) do
         for _, ingredient in pairs(tech.research_unit_ingredients or {}) do
             local name = ingredient.name
+            local unlock = force.technologies[name]
+            config.researched_packs[name] = unlock and unlock.researched == true or (not unlock and unlocked[name] == true)
             if previous[name] == nil then config.pack_defaults[name] = true end
             if config.pack_defaults[name] then
-                local unlock = force.technologies[name]
-                ingredients[name] = unlock and unlock.researched == true or (not unlock and unlocked[name] == true)
+                ingredients[name] = config.researched_packs[name]
             else
                 ingredients[name] = previous[name]
             end

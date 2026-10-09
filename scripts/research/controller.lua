@@ -122,7 +122,9 @@ function research.poll_monitors()
         elseif (config.monitored_lab or next(config.dynamic_packs or {})) and
             (not config.last_pack_check_tick or game.tick - config.last_pack_check_tick >= (config.pack_check_seconds or 10) * 60) then
             config.last_pack_check_tick = game.tick
-            if monitor.sample(force, config, game.tick) then changed(force) end
+            local availability_changed, stock_changed = monitor.sample(force, config, game.tick)
+            if availability_changed then changed(force)
+            elseif stock_changed and change_listener then change_listener(force) end
         end
     end
 end

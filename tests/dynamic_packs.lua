@@ -32,6 +32,8 @@ end
 local pack = "agricultural-science-pack"
 local function row(i) return force.players[i or 1].gui.top.rantz_research_gui.flow.allowed_ingredients[pack] end
 assert(row().rantz_pack_mode.selected_index == 2)
+assert(row().rantz_pack_availability.tooltip[1] == "rantz_research_gui.pack_not_researched")
+assert(row().rantz_pack_availability.sprite == "utility/status_yellow")
 assert(row().rantz_pack_mode.tooltip[1] == "rantz_research_gui.monitor_required")
 assert(not research.set_pack_mode(force, pack, "dynamic"))
 local function select_mode(index)
@@ -75,9 +77,14 @@ player.opened = lab
 lab_gui.refresh(player)
 gui.on_click{player_index = 1, element = player.gui.relative.rantz_research_lab.monitor}
 assert(config.monitored_lab == lab)
+-- Completing the unlock changes status independently of the saved pack mode.
+local unlock = {name = pack, researched = true, force = force, research_unit_ingredients = {}}
+force.technologies[pack] = unlock
+research.on_research_finished{research = unlock}
 select_mode(3)
 assert(config.dynamic_packs[pack] and not monitor.is_allowed(config, pack))
 assert(row().rantz_pack_availability.sprite == "utility/status_not_working")
+assert(row().rantz_pack_availability.tooltip[1] == "rantz_research_gui.pack_out_of_stock")
 assert(row().rantz_pack_mode.selected_index == 3)
 assert(not technology.can_research(force, rare, config))
 contents = {{name = pack, count = 1, quality = "legendary"}}
@@ -86,10 +93,14 @@ research.poll_monitors()
 assert(monitor.is_allowed(config, pack) and row(2).rantz_pack_mode.selected_index == 3)
 assert(row(1).rantz_pack_availability.sprite == "utility/status_working")
 assert(row(2).rantz_pack_availability.sprite == "utility/status_working")
+assert(row(2).rantz_pack_availability.tooltip[1] == "rantz_research_gui.pack_in_stock")
 assert(technology.can_research(force, rare, config))
 -- A gap shorter than five seconds preserves eligibility, including across reload-like requires.
 contents = {}
 game.tick = 120; research.poll_monitors()
+assert(monitor.is_allowed(config, pack), "Grace period still permits research")
+assert(row().rantz_pack_availability.tooltip[1] == "rantz_research_gui.pack_out_of_stock",
+    "Stock status must refresh immediately at the next check, before the grace period ends")
 game.tick = 360; research.poll_monitors()
 assert(monitor.is_allowed(config, pack))
 assert(require("scripts.research.monitor").is_allowed(config, pack))
@@ -124,6 +135,7 @@ assert(not config.monitored_lab and config.dynamic_packs[pack])
 assert(row().rantz_pack_mode.selected_index == 3 and row().rantz_pack_mode.tooltip[1] == "rantz_research_gui.monitor_required")
 assert(not monitor.is_allowed(config, pack))
 select_mode(1)
+assert(row().rantz_pack_availability.tooltip[1] == "rantz_research_gui.pack_stock_not_monitored")
 assert(monitor.is_allowed(config, pack) and not config.dynamic_packs[pack])
 -- A replacement source gets a fresh sample; no stale grace period or inventory.
 lab.valid = true
@@ -186,4 +198,20 @@ assert(research.set_monitored_lab(force, lab))
 assert(research.set_pack_mode(force, pack, "dynamic"))
 research.on_monitored_lab_removed({entity = lab})
 assert(not config.monitored_lab and not monitor.is_allowed(config, pack))
+-- On/Off must not masquerade as actual inventory. Stock-only transitions
+-- refresh both players' indicators without scheduling research.
+research.set_monitored_lab(force, lab)
+select_mode(2)
+contents = {{name = pack, count = 2}}
+local stock_writes = force.queue_writes
+game.tick = game.tick + 600; research.poll_monitors()
+assert(not monitor.is_allowed(config, pack))
+assert(row().rantz_pack_availability.tooltip[1] == "rantz_research_gui.pack_in_stock")
+assert(row(2).rantz_pack_availability.tooltip[1] == "rantz_research_gui.pack_in_stock")
+select_mode(1)
+contents = {}
+game.tick = game.tick + 600; research.poll_monitors()
+assert(monitor.is_allowed(config, pack))
+assert(row().rantz_pack_availability.tooltip[1] == "rantz_research_gui.pack_out_of_stock")
+assert(force.queue_writes == stock_writes)
 print("Dynamic pack regressions passed")

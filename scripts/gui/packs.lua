@@ -1,5 +1,11 @@
 local monitor = require("scripts.research.monitor")
 local packs = {}
+local status_sprites = {
+    pack_in_stock = "utility/status_working",
+    pack_out_of_stock = "utility/status_not_working",
+    pack_not_researched = "utility/status_yellow",
+    pack_stock_not_monitored = "utility/status_yellow"
+}
 
 local pack_order = {
     ["automation-science-pack"] = 1,
@@ -70,16 +76,17 @@ function packs.update(flow, config)
                 {"", "[color=128,128,128]", {"rantz_research_gui.pack_dynamic"}, "[/color]"}}
         dropdown.selected_index = dynamic and 3 or (config.allowed_ingredients[name] and 1 or 2)
         dropdown.tooltip = {"rantz_research_gui." .. (has_lab and "dynamic_tooltip" or "monitor_required")}
+        local status = monitor.pack_status(config, name)
         row.icon.tooltip = {"", prototypes.item[name] and prototypes.item[name].localised_name or name,
-            "\n", {"rantz_research_gui." .. (allowed and "pack_available" or "pack_unavailable")}}
+            "\n", {"rantz_research_gui." .. status}}
         local indicator = row.rantz_pack_availability
         if not indicator then
             indicator = row.add{type = "sprite", name = "rantz_pack_availability"}
             indicator.style.width = 12
             indicator.style.height = 12
         end
-        indicator.sprite = allowed and "utility/status_working" or "utility/status_not_working"
-        indicator.tooltip = {"rantz_research_gui." .. (allowed and "pack_available" or "pack_unavailable")}
+        indicator.sprite = status_sprites[status]
+        indicator.tooltip = {"rantz_research_gui." .. status}
     end
     flow.parent.ingredients_header.summary.caption = {
         "", {"rantz_research_gui.allowed_ingredients_label"}, " (", enabled, "/", #names, ")"

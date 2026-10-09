@@ -17,6 +17,12 @@ function monitor.is_allowed(config, name)
     return config.allowed_ingredients[name] == true
 end
 
+function monitor.pack_status(config, name)
+    if config.researched_packs and config.researched_packs[name] == false then return "pack_not_researched" end
+    if not monitor.has_lab(config) or not config.pack_stock then return "pack_stock_not_monitored" end
+    return config.pack_stock[name] and "pack_in_stock" or "pack_out_of_stock"
+end
+
 -- One inventory per monitored force; no entity searches and no quality filtering.
 function monitor.sample(force, config, tick)
     config.dynamic_available = config.dynamic_available or {}
@@ -34,6 +40,14 @@ function monitor.sample(force, config, tick)
             if item.count > 0 then contents[item.name] = true end
         end
     end
+    local stock = inventory and contents or nil
+    local stock_changed = (stock == nil) ~= (config.pack_stock == nil)
+    for name in pairs(config.allowed_ingredients or {}) do
+        if (stock and stock[name] == true) ~= (config.pack_stock and config.pack_stock[name] == true) then
+            stock_changed = true
+        end
+    end
+    config.pack_stock = stock
     for name, dynamic in pairs(config.dynamic_packs or {}) do
         if dynamic then
             local before = config.dynamic_available[name] == true
@@ -52,7 +66,7 @@ function monitor.sample(force, config, tick)
             if available ~= before then changed = true end
         end
     end
-    return changed
+    return changed, stock_changed
 end
 
 return monitor

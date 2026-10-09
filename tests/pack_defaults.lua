@@ -21,7 +21,9 @@ local config = configuration.ensure(force)
 config.enabled = false
 assert(config.allowed_ingredients["starter-pack"])
 assert(config.allowed_ingredients["completed-pack"])
+assert(config.researched_packs["completed-pack"] and config.researched_packs["starter-pack"])
 assert(not config.allowed_ingredients["advanced-pack"])
+assert(not config.researched_packs["advanced-pack"])
 assert(not config.allowed_ingredients["custom-pack"], "Recycling must not imply the pack is unlocked")
 assert(not config.allowed_ingredients["unknown-pack"])
 advanced.researched = true
@@ -31,6 +33,8 @@ research.set_pack_mode(force, "advanced-pack", "off")
 research.set_pack_mode(force, "unknown-pack", "on")
 configuration.initialize(force)
 assert(not config.allowed_ingredients["advanced-pack"], "Explicit Off survives refresh and completed research")
+assert(config.researched_packs["advanced-pack"], "Manual Off is distinct from Not researched")
+assert(not config.researched_packs["unknown-pack"], "Manual On does not mark a pack researched")
 assert(config.allowed_ingredients["unknown-pack"], "Explicit On survives missing unlock research")
 force.recipes.alternative.enabled = true
 configuration.refresh(force, config)
